@@ -497,7 +497,7 @@ func (l *Logger) newEvent(level Level, done func(string)) *Event {
 		if e.json {
 			e.buf = enc.AppendObjectData(e.buf, l.context)
 		} else {
-			e.fieldsBuf = enc.AppendObjectData(e.buf, l.context)
+			e.fieldsBuf = enc.AppendObjectData(e.fieldsBuf, l.context)
 		}
 	}
 
