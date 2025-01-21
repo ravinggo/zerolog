@@ -1,3 +1,4 @@
+//go:build !binary_log
 // +build !binary_log
 
 package log_test
@@ -35,7 +36,7 @@ func ExamplePrint() {
 	setup()
 
 	log.Print("hello world")
-	// Output: {"level":"debug","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"debug","message":"hello world"}
 }
 
 // Simple logging example using the Printf function in the log package
@@ -43,7 +44,7 @@ func ExamplePrintf() {
 	setup()
 
 	log.Printf("hello %s", "world")
-	// Output: {"level":"debug","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"debug","message":"hello world"}
 }
 
 // Example of a log with no particular "level"
@@ -61,8 +62,8 @@ func ExampleErr() {
 	log.Err(err).Msg("hello world")
 	log.Err(nil).Msg("hello world")
 
-	// Output: {"level":"error","error":"some error","time":1199811905,"message":"hello world"}
-	// {"level":"info","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"error","error":"some error","message":"hello world"}
+	// {"time":1199811905,"level":"info","message":"hello world"}
 }
 
 // Example of a log at a particular "level" (in this case, "trace")
@@ -70,7 +71,7 @@ func ExampleTrace() {
 	setup()
 	log.Trace().Msg("hello world")
 
-	// Output: {"level":"trace","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"trace","message":"hello world"}
 }
 
 // Example of a log at a particular "level" (in this case, "debug")
@@ -78,7 +79,7 @@ func ExampleDebug() {
 	setup()
 	log.Debug().Msg("hello world")
 
-	// Output: {"level":"debug","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"debug","message":"hello world"}
 }
 
 // Example of a log at a particular "level" (in this case, "info")
@@ -86,7 +87,7 @@ func ExampleInfo() {
 	setup()
 	log.Info().Msg("hello world")
 
-	// Output: {"level":"info","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"info","message":"hello world"}
 }
 
 // Example of a log at a particular "level" (in this case, "warn")
@@ -94,7 +95,7 @@ func ExampleWarn() {
 	setup()
 	log.Warn().Msg("hello world")
 
-	// Output: {"level":"warn","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"warn","message":"hello world"}
 }
 
 // Example of a log at a particular "level" (in this case, "error")
@@ -102,7 +103,7 @@ func ExampleError() {
 	setup()
 	log.Error().Msg("hello world")
 
-	// Output: {"level":"error","time":1199811905,"message":"hello world"}
+	// Output: {"time":1199811905,"level":"error","message":"hello world"}
 }
 
 // Example of a log at a particular "level" (in this case, "fatal")
@@ -144,7 +145,7 @@ func Example() {
 		e.Str("foo", value).Msg("some debug message")
 	}
 
-	// Output: {"level":"info","time":1199811905,"message":"This message appears when log level set to Debug or Info"}
+	// Output: {"time":1199811905,"level":"info","message":"This message appears when log level set to Debug or Info"}
 }
 
 // TODO: Output
