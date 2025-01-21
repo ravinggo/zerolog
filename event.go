@@ -902,7 +902,7 @@ func (e *Event) baseTimestamp() *Event {
 	if e.json {
 		e.buf = enc.AppendTime(enc.AppendKey(e.buf, TimestampFieldName), TimestampFunc(), TimeFieldFormat)
 	} else {
-		e.buf = TimestampFunc().AppendFormat(e.buf, TimestampFieldName)
+		e.buf = TimestampFunc().AppendFormat(e.buf, TimeFieldFormat)
 		e.buf = append(e.buf, '\t')
 	}
 	return e
@@ -1039,7 +1039,7 @@ func (e *Event) caller(skip int) *Event {
 	if e.json {
 		e.buf = enc.AppendString(enc.AppendKey(e.buf, CallerFieldName), CallerMarshalFunc(pc, file, line))
 	} else {
-		e.buf = append(e.buf, CallerFieldName...)
+		e.buf = append(e.buf, CallerMarshalFunc(pc, file, line)...)
 		e.buf = append(e.buf, '\t')
 	}
 	return e
