@@ -19,6 +19,16 @@ func (c Context) Logger() Logger {
 	return c.l
 }
 
+func (c Context) NotUseJson() Context {
+	c.l.notJson = true
+	return c
+}
+
+func (c Context) Timestamp() Context {
+	c.l.timestamp = true
+	return c
+}
+
 // Fields is a helper function to use a map or slice to set fields using type assertion.
 // Only map[string]interface{} and []interface{} are accepted. []interface{} must
 // alternate string keys and arbitrary values, and extraneous ones are ignored.
@@ -57,7 +67,7 @@ func (c Context) Array(key string, arr LogArrayMarshaler) Context {
 
 // Object marshals an object that implement the LogObjectMarshaler interface.
 func (c Context) Object(key string, obj LogObjectMarshaler) Context {
-	e := newEvent(LevelWriterAdapter{io.Discard}, 0)
+	e := newEvent(LevelWriterAdapter{io.Discard}, 0, true)
 	e.Object(key, obj)
 	c.l.context = enc.AppendObjectData(c.l.context, e.buf)
 	putEvent(e)
@@ -66,7 +76,7 @@ func (c Context) Object(key string, obj LogObjectMarshaler) Context {
 
 // EmbedObject marshals and Embeds an object that implement the LogObjectMarshaler interface.
 func (c Context) EmbedObject(obj LogObjectMarshaler) Context {
-	e := newEvent(LevelWriterAdapter{io.Discard}, 0)
+	e := newEvent(LevelWriterAdapter{io.Discard}, 0, true)
 	e.EmbedObject(obj)
 	c.l.context = enc.AppendObjectData(c.l.context, e.buf)
 	putEvent(e)
@@ -347,24 +357,6 @@ func (c Context) Floats64(key string, f []float64) Context {
 	return c
 }
 
-type timestampHook struct{}
-
-func (ts timestampHook) Run(e *Event, level Level, msg string) {
-	e.Timestamp()
-}
-
-var th = timestampHook{}
-
-// Timestamp adds the current local time to the logger context with the "time" key, formatted using zerolog.TimeFieldFormat.
-// To customize the key name, change zerolog.TimestampFieldName.
-// To customize the time format, change zerolog.TimeFieldFormat.
-//
-// NOTE: It won't dedupe the "time" key if the *Context has one already.
-func (c Context) Timestamp() Context {
-	c.l = c.l.Hook(th)
-	return c
-}
-
 // Time adds the field key with t formatted as string using zerolog.TimeFieldFormat.
 func (c Context) Time(key string, t time.Time) Context {
 	c.l.context = enc.AppendTime(enc.AppendKey(c.l.context, key), t, TimeFieldFormat)
@@ -411,7 +403,7 @@ func (c Context) Any(key string, i interface{}) Context {
 
 // Reset removes all the context fields.
 func (c Context) Reset() Context {
-	c.l.context = enc.AppendBeginMarker(make([]byte, 0, 500))
+	c.l.context = enc.AppendBeginMarker(make([]byte, 0, 1024))
 	return c
 }
 
@@ -443,7 +435,7 @@ var ch = newCallerHook(useGlobalSkipFrameCount)
 
 // Caller adds the file:line of the caller with the zerolog.CallerFieldName key.
 func (c Context) Caller() Context {
-	c.l = c.l.Hook(ch)
+	c.l.skipFrameCount = CallerSkipFrameCount + 1
 	return c
 }
 
@@ -451,7 +443,7 @@ func (c Context) Caller() Context {
 // The specified skipFrameCount int will override the global CallerSkipFrameCount for this context's respective logger.
 // If set to -1 the global CallerSkipFrameCount will be used.
 func (c Context) CallerWithSkipFrameCount(skipFrameCount int) Context {
-	c.l = c.l.Hook(newCallerHook(skipFrameCount))
+	c.l.skipFrameCount = skipFrameCount + 1
 	return c
 }
 

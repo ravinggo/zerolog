@@ -227,13 +227,16 @@ func (l Level) MarshalText() ([]byte, error) {
 // serialization to the Writer. If your Writer is not thread safe,
 // you may consider a sync wrapper.
 type Logger struct {
-	w       LevelWriter
-	level   Level
-	sampler Sampler
-	context []byte
-	hooks   []Hook
-	stack   bool
-	ctx     context.Context
+	w              LevelWriter
+	level          Level
+	sampler        Sampler
+	context        []byte
+	hooks          []Hook
+	stack          bool
+	notJson        bool
+	skipFrameCount int
+	timestamp      bool
+	ctx            context.Context
 }
 
 // New creates a root logger with given output writer. If the output writer implements
@@ -262,6 +265,7 @@ func Nop() Logger {
 // Output duplicates the current logger and sets w as its output.
 func (l Logger) Output(w io.Writer) Logger {
 	l2 := New(w)
+	l2.notJson = l.notJson
 	l2.level = l.level
 	l2.sampler = l.sampler
 	l2.stack = l.stack
@@ -278,7 +282,7 @@ func (l Logger) Output(w io.Writer) Logger {
 // With creates a child logger with the field added to its context.
 func (l Logger) With() Context {
 	context := l.context
-	l.context = make([]byte, 0, 500)
+	l.context = make([]byte, 0, 1024)
 	if context != nil {
 		l.context = append(l.context, context...)
 	} else {
@@ -298,7 +302,7 @@ func (l *Logger) UpdateContext(update func(c Context) Context) {
 		return
 	}
 	if cap(l.context) == 0 {
-		l.context = make([]byte, 0, 500)
+		l.context = make([]byte, 0, 1024)
 	}
 	if len(l.context) == 0 {
 		l.context = enc.AppendBeginMarker(l.context)
@@ -387,14 +391,16 @@ func (l *Logger) Err(err error) *Event {
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) Fatal() *Event {
-	return l.newEvent(FatalLevel, func(msg string) {
-		if closer, ok := l.w.(io.Closer); ok {
-			// Close the writer to flush any buffered message. Otherwise the message
-			// will be lost as os.Exit() terminates the program immediately.
-			closer.Close()
-		}
-		os.Exit(1)
-	})
+	return l.newEvent(
+		FatalLevel, func(msg string) {
+			if closer, ok := l.w.(io.Closer); ok {
+				// Close the writer to flush any buffered message. Otherwise the message
+				// will be lost as os.Exit() terminates the program immediately.
+				closer.Close()
+			}
+			os.Exit(1)
+		},
+	)
 }
 
 // Panic starts a new message with panic level. The panic() function
@@ -443,30 +449,6 @@ func (l *Logger) Log() *Event {
 	return l.newEvent(NoLevel, nil)
 }
 
-// Print sends a log event using debug level and no extra field.
-// Arguments are handled in the manner of fmt.Print.
-func (l *Logger) Print(v ...interface{}) {
-	if e := l.Debug(); e.Enabled() {
-		e.CallerSkipFrame(1).Msg(fmt.Sprint(v...))
-	}
-}
-
-// Printf sends a log event using debug level and no extra field.
-// Arguments are handled in the manner of fmt.Printf.
-func (l *Logger) Printf(format string, v ...interface{}) {
-	if e := l.Debug(); e.Enabled() {
-		e.CallerSkipFrame(1).Msg(fmt.Sprintf(format, v...))
-	}
-}
-
-// Println sends a log event using debug level and no extra field.
-// Arguments are handled in the manner of fmt.Println.
-func (l *Logger) Println(v ...interface{}) {
-	if e := l.Debug(); e.Enabled() {
-		e.CallerSkipFrame(1).Msg(fmt.Sprintln(v...))
-	}
-}
-
 // Write implements the io.Writer interface. This is useful to set as a writer
 // for the standard library log.
 func (l Logger) Write(p []byte) (n int, err error) {
@@ -475,7 +457,10 @@ func (l Logger) Write(p []byte) (n int, err error) {
 		// Trim CR added by stdlog.
 		p = p[0 : n-1]
 	}
-	l.Log().CallerSkipFrame(1).Msg(string(p))
+	if l.skipFrameCount > 0 {
+		l.skipFrameCount += 1
+	}
+	l.Log().Msg(string(p))
 	return
 }
 
@@ -487,16 +472,35 @@ func (l *Logger) newEvent(level Level, done func(string)) *Event {
 		}
 		return nil
 	}
-	e := newEvent(l.w, level)
+	e := newEvent(l.w, level, !l.notJson)
 	e.done = done
 	e.ch = l.hooks
 	e.ctx = l.ctx
+	if l.timestamp {
+		e.baseTimestamp()
+	}
+
 	if level != NoLevel && LevelFieldName != "" {
-		e.Str(LevelFieldName, LevelFieldMarshalFunc(level))
+		if e.json {
+			e.buf = enc.AppendString(enc.AppendKey(e.buf, LevelFieldName), LevelFieldMarshalFunc(level))
+		} else {
+			e.buf = append(e.buf, LevelFieldMarshalFunc(level)...)
+			e.buf = append(e.buf, '\t')
+		}
 	}
+
+	if l.skipFrameCount > 0 {
+		e.caller(l.skipFrameCount)
+	}
+
 	if len(l.context) > 1 {
-		e.buf = enc.AppendObjectData(e.buf, l.context)
+		if e.json {
+			e.buf = enc.AppendObjectData(e.buf, l.context)
+		} else {
+			e.fieldsBuf = enc.AppendObjectData(e.buf, l.context)
+		}
 	}
+
 	if l.stack {
 		e.Stack()
 	}

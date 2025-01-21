@@ -1,3 +1,4 @@
+//go:build !binary_log
 // +build !binary_log
 
 package zerolog_test
@@ -77,30 +78,6 @@ func ExampleLogger_Hook() {
 	log.Info().Msg("hello world")
 
 	// Output: {"level":"info","level_name":"info","the_message":"hello world","message":"hello world"}
-}
-
-func ExampleLogger_Print() {
-	log := zerolog.New(os.Stdout)
-
-	log.Print("hello world")
-
-	// Output: {"level":"debug","message":"hello world"}
-}
-
-func ExampleLogger_Printf() {
-	log := zerolog.New(os.Stdout)
-
-	log.Printf("hello %s", "world")
-
-	// Output: {"level":"debug","message":"hello world"}
-}
-
-func ExampleLogger_Println() {
-	log := zerolog.New(os.Stdout)
-
-	log.Println("hello world")
-
-	// Output: {"level":"debug","message":"hello world\n"}
 }
 
 func ExampleLogger_Trace() {
@@ -194,9 +171,10 @@ func ExampleEvent_Dict() {
 
 	log.Log().
 		Str("foo", "bar").
-		Dict("dict", zerolog.Dict().
-			Str("bar", "baz").
-			Int("n", 1),
+		Dict(
+			"dict", zerolog.Dict().
+				Str("bar", "baz").
+				Int("n", 1),
 		).
 		Msg("hello world")
 
@@ -244,13 +222,15 @@ func ExampleEvent_Array() {
 
 	log.Log().
 		Str("foo", "bar").
-		Array("array", zerolog.Arr().
-			Str("baz").
-			Int(1).
-			Dict(zerolog.Dict().
-				Str("bar", "baz").
-				Int("n", 1),
-			),
+		Array(
+			"array", zerolog.Arr().
+				Str("baz").
+				Int(1).
+				Dict(
+					zerolog.Dict().
+						Str("bar", "baz").
+						Int("n", 1),
+				),
 		).
 		Msg("hello world")
 
@@ -382,9 +362,10 @@ func ExampleEvent_Fields_slice() {
 func ExampleContext_Dict() {
 	log := zerolog.New(os.Stdout).With().
 		Str("foo", "bar").
-		Dict("dict", zerolog.Dict().
-			Str("bar", "baz").
-			Int("n", 1),
+		Dict(
+			"dict", zerolog.Dict().
+				Str("bar", "baz").
+				Int("n", 1),
 		).Logger()
 
 	log.Log().Msg("hello world")
@@ -395,9 +376,10 @@ func ExampleContext_Dict() {
 func ExampleContext_Array() {
 	log := zerolog.New(os.Stdout).With().
 		Str("foo", "bar").
-		Array("array", zerolog.Arr().
-			Str("baz").
-			Int(1),
+		Array(
+			"array", zerolog.Arr().
+				Str("baz").
+				Int(1),
 		).Logger()
 
 	log.Log().Msg("hello world")

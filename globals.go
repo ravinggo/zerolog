@@ -124,18 +124,6 @@ var (
 	// with the context.
 	DefaultContextLogger *Logger
 
-	// LevelColors are used by ConsoleWriter's consoleDefaultFormatLevel to color
-	// log levels.
-	LevelColors = map[Level]int{
-		TraceLevel: colorBlue,
-		DebugLevel: 0,
-		InfoLevel:  colorGreen,
-		WarnLevel:  colorYellow,
-		ErrorLevel: colorRed,
-		FatalLevel: colorRed,
-		PanicLevel: colorRed,
-	}
-
 	// FormattedLevels are used by ConsoleWriter's consoleDefaultFormatLevel
 	// for a short level name.
 	FormattedLevels = map[Level]string{

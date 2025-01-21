@@ -43,7 +43,7 @@ func appendFieldList(dst []byte, kvList []interface{}, stack bool) []byte {
 			continue
 		}
 		if val, ok := val.(LogObjectMarshaler); ok {
-			e := newEvent(nil, 0)
+			e := newEvent(nil, 0, true)
 			e.buf = e.buf[:0]
 			e.appendObject(val)
 			dst = append(dst, e.buf...)
@@ -58,7 +58,7 @@ func appendFieldList(dst []byte, kvList []interface{}, stack bool) []byte {
 		case error:
 			switch m := ErrorMarshalFunc(val).(type) {
 			case LogObjectMarshaler:
-				e := newEvent(nil, 0)
+				e := newEvent(nil, 0, true)
 				e.buf = e.buf[:0]
 				e.appendObject(m)
 				dst = append(dst, e.buf...)
@@ -94,7 +94,7 @@ func appendFieldList(dst []byte, kvList []interface{}, stack bool) []byte {
 			for i, err := range val {
 				switch m := ErrorMarshalFunc(err).(type) {
 				case LogObjectMarshaler:
-					e := newEvent(nil, 0)
+					e := newEvent(nil, 0, true)
 					e.buf = e.buf[:0]
 					e.appendObject(m)
 					dst = append(dst, e.buf...)

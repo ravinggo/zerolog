@@ -9,7 +9,7 @@ import (
 var arrayPool = &sync.Pool{
 	New: func() interface{} {
 		return &Array{
-			buf: make([]byte, 0, 500),
+			buf: make([]byte, 0, 1024),
 		}
 	},
 }
@@ -95,7 +95,7 @@ func (a *Array) RawJSON(val []byte) *Array {
 func (a *Array) Err(err error) *Array {
 	switch m := ErrorMarshalFunc(err).(type) {
 	case LogObjectMarshaler:
-		e := newEvent(nil, 0)
+		e := newEvent(nil, 0, true)
 		e.buf = e.buf[:0]
 		e.appendObject(m)
 		a.buf = append(enc.AppendArrayDelim(a.buf), e.buf...)

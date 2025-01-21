@@ -13,7 +13,7 @@ import (
 
 var bufPool = &sync.Pool{
 	New: func() interface{} {
-		return make([]byte, 0, 500)
+		return make([]byte, 0, 1024)
 	},
 }
 
@@ -60,12 +60,16 @@ func NewWriter(w io.Writer, size int, pollInterval time.Duration, f Alerter) Wri
 	}
 	d := diodes.NewManyToOne(size, diodes.AlertFunc(f))
 	if pollInterval > 0 {
-		dw.d = diodes.NewPoller(d,
+		dw.d = diodes.NewPoller(
+			d,
 			diodes.WithPollingInterval(pollInterval),
-			diodes.WithPollingContext(ctx))
+			diodes.WithPollingContext(ctx),
+		)
 	} else {
-		dw.d = diodes.NewWaiter(d,
-			diodes.WithWaiterContext(ctx))
+		dw.d = diodes.NewWaiter(
+			d,
+			diodes.WithWaiterContext(ctx),
+		)
 	}
 	go dw.poll()
 	return dw

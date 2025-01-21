@@ -1,3 +1,4 @@
+//go:build !binary_log
 // +build !binary_log
 
 package zerolog
@@ -26,21 +27,23 @@ func TestEvent_AnErr(t *testing.T) {
 		{"nil interface", func() *nilError { return nil }(), `{}`},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			e := newEvent(LevelWriterAdapter{&buf}, DebugLevel)
-			e.AnErr("err", tt.err)
-			_ = e.write()
-			if got, want := strings.TrimSpace(buf.String()), tt.want; got != want {
-				t.Errorf("Event.AnErr() = %v, want %v", got, want)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				var buf bytes.Buffer
+				e := newEvent(LevelWriterAdapter{&buf}, DebugLevel, true)
+				e.AnErr("err", tt.err)
+				_ = e.write()
+				if got, want := strings.TrimSpace(buf.String()), tt.want; got != want {
+					t.Errorf("Event.AnErr() = %v, want %v", got, want)
+				}
+			},
+		)
 	}
 }
 
 func TestEvent_ObjectWithNil(t *testing.T) {
 	var buf bytes.Buffer
-	e := newEvent(LevelWriterAdapter{&buf}, DebugLevel)
+	e := newEvent(LevelWriterAdapter{&buf}, DebugLevel, true)
 	_ = e.Object("obj", nil)
 	_ = e.write()
 
@@ -53,7 +56,7 @@ func TestEvent_ObjectWithNil(t *testing.T) {
 
 func TestEvent_EmbedObjectWithNil(t *testing.T) {
 	var buf bytes.Buffer
-	e := newEvent(LevelWriterAdapter{&buf}, DebugLevel)
+	e := newEvent(LevelWriterAdapter{&buf}, DebugLevel, true)
 	_ = e.EmbedObject(nil)
 	_ = e.write()
 

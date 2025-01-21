@@ -180,13 +180,6 @@ func (t TestWriter) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
-// ConsoleTestWriter creates an option that correctly sets the file frame depth for testing.TB log.
-func ConsoleTestWriter(t TestingLog) func(w *ConsoleWriter) {
-	return func(w *ConsoleWriter) {
-		w.Out = TestWriter{T: t, Frame: 6}
-	}
-}
-
 // FilteredLevelWriter writes only logs at Level or above to Writer.
 //
 // It should be used only in combination with MultiLevelWriter when you
