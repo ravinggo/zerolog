@@ -902,7 +902,7 @@ func (e *Event) baseTimestamp() *Event {
 	if e.json {
 		e.buf = enc.AppendTime(enc.AppendKey(e.buf, TimestampFieldName), TimestampFunc(), TimeFieldFormat)
 	} else {
-		e.buf = enc.AppendTime(e.buf, TimestampFunc(), TimeFieldFormat)
+		e.buf = TimestampFunc().AppendFormat(e.buf, TimestampFieldName)
 		e.buf = append(e.buf, '\t')
 	}
 	return e
