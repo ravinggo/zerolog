@@ -123,6 +123,20 @@ var (
 	// DefaultContextLogger is returned from Ctx() if there is no logger associated
 	// with the context.
 	DefaultContextLogger *Logger
+	// LevelColors are used by ConsoleWriter's consoleDefaultFormatLevel to color
+	// log levels.
+	noColor     = []byte("\x1b[0m")
+	LevelColors = [9][]byte{
+		DebugLevel:     noColor,
+		InfoLevel:      []byte("\x1b[32m"),
+		WarnLevel:      []byte("\x1b[33m"),
+		ErrorLevel:     []byte("\x1b[31m"),
+		FatalLevel:     []byte("\x1b[31m"),
+		PanicLevel:     []byte("\x1b[31m"),
+		NoLevel:        noColor,
+		Disabled:       noColor,
+		TraceLevel + 9: []byte("\x1b[34m"),
+	}
 
 	// FormattedLevels are used by ConsoleWriter's consoleDefaultFormatLevel
 	// for a short level name.
@@ -140,7 +154,7 @@ var (
 	// from the TriggerLevelWriter buffer pool if the buffer grows above the limit.
 	TriggerLevelWriterBufferReuseLimit = 64 * 1024
 
-	// FloatingPointPrecision, if set to a value other than -1, controls the number
+	// FloatingPointPrecision , if set to a value other than -1, controls the number
 	// of digits when formatting float numbers in JSON. See strconv.FormatFloat for
 	// more details.
 	FloatingPointPrecision = -1

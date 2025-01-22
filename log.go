@@ -234,8 +234,9 @@ type Logger struct {
 	hooks          []Hook
 	stack          bool
 	notJson        bool
-	skipFrameCount int
+	color          bool
 	timestamp      bool
+	skipFrameCount int
 	ctx            context.Context
 }
 
@@ -281,10 +282,10 @@ func (l Logger) Output(w io.Writer) Logger {
 
 // With creates a child logger with the field added to its context.
 func (l Logger) With() Context {
-	context := l.context
+	lc := l.context
 	l.context = make([]byte, 0, 1024)
-	if context != nil {
-		l.context = append(l.context, context...)
+	if lc != nil {
+		l.context = append(l.context, lc...)
 	} else {
 		// This is needed for AppendKey to not check len of input
 		// thus making it inlinable
@@ -484,7 +485,18 @@ func (l *Logger) newEvent(level Level, done func(string)) *Event {
 		if e.json {
 			e.buf = enc.AppendString(enc.AppendKey(e.buf, LevelFieldName), LevelFieldMarshalFunc(level))
 		} else {
-			e.buf = append(e.buf, LevelFieldMarshalFunc(level)...)
+			if l.color {
+				lv := level
+				if lv == TraceLevel {
+					lv = TraceLevel + Level(len(LevelColors))
+				}
+				e.buf = append(e.buf, LevelColors[lv]...)
+				e.buf = append(e.buf, LevelFieldMarshalFunc(level)...)
+				e.buf = append(e.buf, noColor...)
+			} else {
+				e.buf = append(e.buf, LevelFieldMarshalFunc(level)...)
+			}
+
 			e.buf = append(e.buf, '\t')
 		}
 	}

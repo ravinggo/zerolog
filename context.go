@@ -19,8 +19,9 @@ func (c Context) Logger() Logger {
 	return c.l
 }
 
-func (c Context) NotUseJson() Context {
+func (c Context) NotUseJson(color bool) Context {
 	c.l.notJson = true
+	c.l.color = color
 	return c
 }
 
