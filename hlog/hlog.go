@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/hlog/internal/mutil"
-	"github.com/rs/zerolog/log"
+
+	"github.com/ravinggo/zerolog"
+	"github.com/ravinggo/zerolog/hlog/internal/mutil"
+	"github.com/ravinggo/zerolog/log"
 )
 
 // FromRequest gets the logger in the request's context.
@@ -23,13 +24,15 @@ func FromRequest(r *http.Request) *zerolog.Logger {
 // NewHandler injects log into requests context.
 func NewHandler(log zerolog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Create a copy of the logger (including internal context slice)
-			// to prevent data race when using UpdateContext.
-			l := log.With().Logger()
-			r = r.WithContext(l.WithContext(r.Context()))
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				// Create a copy of the logger (including internal context slice)
+				// to prevent data race when using UpdateContext.
+				l := log.With().Logger()
+				r = r.WithContext(l.WithContext(r.Context()))
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -37,13 +40,17 @@ func NewHandler(log zerolog.Logger) func(http.Handler) http.Handler {
 // using fieldKey as field key.
 func URLHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log := zerolog.Ctx(r.Context())
-			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Str(fieldKey, r.URL.String())
-			})
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				log := zerolog.Ctx(r.Context())
+				log.UpdateContext(
+					func(c zerolog.Context) zerolog.Context {
+						return c.Str(fieldKey, r.URL.String())
+					},
+				)
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -51,13 +58,17 @@ func URLHandler(fieldKey string) func(next http.Handler) http.Handler {
 // using fieldKey as field key.
 func MethodHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log := zerolog.Ctx(r.Context())
-			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Str(fieldKey, r.Method)
-			})
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				log := zerolog.Ctx(r.Context())
+				log.UpdateContext(
+					func(c zerolog.Context) zerolog.Context {
+						return c.Str(fieldKey, r.Method)
+					},
+				)
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -65,13 +76,17 @@ func MethodHandler(fieldKey string) func(next http.Handler) http.Handler {
 // using fieldKey as field key.
 func RequestHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log := zerolog.Ctx(r.Context())
-			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Str(fieldKey, r.Method+" "+r.URL.String())
-			})
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				log := zerolog.Ctx(r.Context())
+				log.UpdateContext(
+					func(c zerolog.Context) zerolog.Context {
+						return c.Str(fieldKey, r.Method+" "+r.URL.String())
+					},
+				)
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -79,15 +94,19 @@ func RequestHandler(fieldKey string) func(next http.Handler) http.Handler {
 // using fieldKey as field key.
 func RemoteAddrHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.RemoteAddr != "" {
-				log := zerolog.Ctx(r.Context())
-				log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-					return c.Str(fieldKey, r.RemoteAddr)
-				})
-			}
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				if r.RemoteAddr != "" {
+					log := zerolog.Ctx(r.Context())
+					log.UpdateContext(
+						func(c zerolog.Context) zerolog.Context {
+							return c.Str(fieldKey, r.RemoteAddr)
+						},
+					)
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -107,16 +126,20 @@ func getHost(hostPort string) string {
 // an IP, not a port.
 func RemoteIPHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ip := getHost(r.RemoteAddr)
-			if ip != "" {
-				log := zerolog.Ctx(r.Context())
-				log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-					return c.Str(fieldKey, ip)
-				})
-			}
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				ip := getHost(r.RemoteAddr)
+				if ip != "" {
+					log := zerolog.Ctx(r.Context())
+					log.UpdateContext(
+						func(c zerolog.Context) zerolog.Context {
+							return c.Str(fieldKey, ip)
+						},
+					)
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -124,15 +147,19 @@ func RemoteIPHandler(fieldKey string) func(next http.Handler) http.Handler {
 // using fieldKey as field key.
 func UserAgentHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ua := r.Header.Get("User-Agent"); ua != "" {
-				log := zerolog.Ctx(r.Context())
-				log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-					return c.Str(fieldKey, ua)
-				})
-			}
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				if ua := r.Header.Get("User-Agent"); ua != "" {
+					log := zerolog.Ctx(r.Context())
+					log.UpdateContext(
+						func(c zerolog.Context) zerolog.Context {
+							return c.Str(fieldKey, ua)
+						},
+					)
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -140,15 +167,19 @@ func UserAgentHandler(fieldKey string) func(next http.Handler) http.Handler {
 // using fieldKey as field key.
 func RefererHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ref := r.Header.Get("Referer"); ref != "" {
-				log := zerolog.Ctx(r.Context())
-				log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-					return c.Str(fieldKey, ref)
-				})
-			}
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				if ref := r.Header.Get("Referer"); ref != "" {
+					log := zerolog.Ctx(r.Context())
+					log.UpdateContext(
+						func(c zerolog.Context) zerolog.Context {
+							return c.Str(fieldKey, ref)
+						},
+					)
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -156,13 +187,17 @@ func RefererHandler(fieldKey string) func(next http.Handler) http.Handler {
 // using fieldKey as field Key.
 func ProtoHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log := zerolog.Ctx(r.Context())
-			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Str(fieldKey, r.Proto)
-			})
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				log := zerolog.Ctx(r.Context())
+				log.UpdateContext(
+					func(c zerolog.Context) zerolog.Context {
+						return c.Str(fieldKey, r.Proto)
+					},
+				)
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -170,14 +205,18 @@ func ProtoHandler(fieldKey string) func(next http.Handler) http.Handler {
 // prefix in the protocol name.
 func HTTPVersionHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			proto := strings.TrimPrefix(r.Proto, "HTTP/")
-			log := zerolog.Ctx(r.Context())
-			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Str(fieldKey, proto)
-			})
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				proto := strings.TrimPrefix(r.Proto, "HTTP/")
+				log := zerolog.Ctx(r.Context())
+				log.UpdateContext(
+					func(c zerolog.Context) zerolog.Context {
+						return c.Str(fieldKey, proto)
+					},
+				)
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -213,25 +252,29 @@ func CtxWithID(ctx context.Context, id xid.ID) context.Context {
 // configuration.
 func RequestIDHandler(fieldKey, headerName string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			id, ok := IDFromRequest(r)
-			if !ok {
-				id = xid.New()
-				ctx = CtxWithID(ctx, id)
-				r = r.WithContext(ctx)
-			}
-			if fieldKey != "" {
-				log := zerolog.Ctx(ctx)
-				log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-					return c.Str(fieldKey, id.String())
-				})
-			}
-			if headerName != "" {
-				w.Header().Set(headerName, id.String())
-			}
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
+				id, ok := IDFromRequest(r)
+				if !ok {
+					id = xid.New()
+					ctx = CtxWithID(ctx, id)
+					r = r.WithContext(ctx)
+				}
+				if fieldKey != "" {
+					log := zerolog.Ctx(ctx)
+					log.UpdateContext(
+						func(c zerolog.Context) zerolog.Context {
+							return c.Str(fieldKey, id.String())
+						},
+					)
+				}
+				if headerName != "" {
+					w.Header().Set(headerName, id.String())
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -239,15 +282,19 @@ func RequestIDHandler(fieldKey, headerName string) func(next http.Handler) http.
 // the context's logger using fieldKey as field key.
 func CustomHeaderHandler(fieldKey, header string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if val := r.Header.Get(header); val != "" {
-				log := zerolog.Ctx(r.Context())
-				log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-					return c.Str(fieldKey, val)
-				})
-			}
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				if val := r.Header.Get(header); val != "" {
+					log := zerolog.Ctx(r.Context())
+					log.UpdateContext(
+						func(c zerolog.Context) zerolog.Context {
+							return c.Str(fieldKey, val)
+						},
+					)
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
@@ -255,50 +302,60 @@ func CustomHeaderHandler(fieldKey, header string) func(next http.Handler) http.H
 // the context's logger using fieldKey as field key.
 func EtagHandler(fieldKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				etag := w.Header().Get("Etag")
-				if etag != "" {
-					etag = strings.ReplaceAll(etag, `"`, "")
-					log := zerolog.Ctx(r.Context())
-					log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-						return c.Str(fieldKey, etag)
-					})
-				}
-			}()
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				defer func() {
+					etag := w.Header().Get("Etag")
+					if etag != "" {
+						etag = strings.ReplaceAll(etag, `"`, "")
+						log := zerolog.Ctx(r.Context())
+						log.UpdateContext(
+							func(c zerolog.Context) zerolog.Context {
+								return c.Str(fieldKey, etag)
+							},
+						)
+					}
+				}()
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
 func ResponseHeaderHandler(fieldKey, headerName string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				value := w.Header().Get(headerName)
-				if value != "" {
-					log := zerolog.Ctx(r.Context())
-					log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-						return c.Str(fieldKey, value)
-					})
-				}
-			}()
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				defer func() {
+					value := w.Header().Get(headerName)
+					if value != "" {
+						log := zerolog.Ctx(r.Context())
+						log.UpdateContext(
+							func(c zerolog.Context) zerolog.Context {
+								return c.Str(fieldKey, value)
+							},
+						)
+					}
+				}()
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }
 
 // AccessHandler returns a handler that call f after each request.
 func AccessHandler(f func(r *http.Request, status, size int, duration time.Duration)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
-			lw := mutil.WrapWriter(w)
-			defer func() {
-				f(r, lw.Status(), lw.BytesWritten(), time.Since(start))
-			}()
-			next.ServeHTTP(lw, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				start := time.Now()
+				lw := mutil.WrapWriter(w)
+				defer func() {
+					f(r, lw.Status(), lw.BytesWritten(), time.Since(start))
+				}()
+				next.ServeHTTP(lw, r)
+			},
+		)
 	}
 }
 
@@ -307,20 +364,24 @@ func AccessHandler(f func(r *http.Request, status, size int, duration time.Durat
 // removed from the host.
 func HostHandler(fieldKey string, trimPort ...bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			var host string
-			if len(trimPort) > 0 && trimPort[0] {
-				host = getHost(r.Host)
-			} else {
-				host = r.Host
-			}
-			if host != "" {
-				log := zerolog.Ctx(r.Context())
-				log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-					return c.Str(fieldKey, host)
-				})
-			}
-			next.ServeHTTP(w, r)
-		})
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				var host string
+				if len(trimPort) > 0 && trimPort[0] {
+					host = getHost(r.Host)
+				} else {
+					host = r.Host
+				}
+				if host != "" {
+					log := zerolog.Ctx(r.Context())
+					log.UpdateContext(
+						func(c zerolog.Context) zerolog.Context {
+							return c.Str(fieldKey, host)
+						},
+					)
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
 	}
 }

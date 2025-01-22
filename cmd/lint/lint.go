@@ -30,7 +30,7 @@ func init() {
 	flag.Parse()
 
 	// add zerolog to recursively ignored packages
-	recursivelyIgnoredPkgs = append(recursivelyIgnoredPkgs, "github.com/rs/zerolog")
+	recursivelyIgnoredPkgs = append(recursivelyIgnoredPkgs, "github.com/ravinggo/zerolog")
 	args := flag.Args()
 	if len(args) != 1 {
 		fmt.Fprintln(os.Stderr, "you must provide exactly one package path")
@@ -49,14 +49,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	// get the github.com/rs/zerolog.Event type
+	// get the github.com/ravinggo/zerolog.Event type
 	event := getEvent(p)
 	if event == nil {
-		fmt.Fprintln(os.Stderr, "Error: github.com/rs/zerolog.Event declaration not found, maybe zerolog is not imported in the scanned package?")
+		fmt.Fprintln(os.Stderr, "Error: github.com/ravinggo/zerolog.Event declaration not found, maybe zerolog is not imported in the scanned package?")
 		os.Exit(1)
 	}
 
-	// get all selections (function calls) with the github.com/rs/zerolog.Event (or pointer) receiver
+	// get all selections (function calls) with the github.com/ravinggo/zerolog.Event (or pointer) receiver
 	selections := getSelectionsWithReceiverType(p, event)
 
 	// print the violations (if any)
@@ -64,7 +64,10 @@ func main() {
 	for _, s := range selections {
 		if hasBadFinisher(p, s) {
 			hasViolations = true
-			fmt.Printf("Error: missing or bad finisher for log chain, last call: %q at: %s:%v\n", s.fn.Name(), p.Fset.File(s.Pos()).Name(), p.Fset.Position(s.Pos()).Line)
+			fmt.Printf(
+				"Error: missing or bad finisher for log chain, last call: %q at: %s:%v\n", s.fn.Name(), p.Fset.File(s.Pos()).Name(),
+				p.Fset.Position(s.Pos()).Line,
+			)
 		}
 	}
 
@@ -80,7 +83,7 @@ func main() {
 
 func getEvent(p *loader.Program) types.Type {
 	for _, pkg := range p.AllPackages {
-		if strings.HasSuffix(pkg.Pkg.Path(), "github.com/rs/zerolog") {
+		if strings.HasSuffix(pkg.Pkg.Path(), "github.com/ravinggo/zerolog") {
 			for _, d := range pkg.Defs {
 				if d != nil && d.Name() == "Event" {
 					return d.Type()
@@ -170,6 +173,6 @@ func (i *arrayFlag) Set(value string) error {
 
 type selection struct {
 	*ast.SelectorExpr
-	fn  *types.Func
+	fn *types.Func
 	pkg *types.Package
 }

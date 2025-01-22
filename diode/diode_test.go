@@ -10,16 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/diode"
-	"github.com/rs/zerolog/internal/cbor"
+	"github.com/ravinggo/zerolog"
+	"github.com/ravinggo/zerolog/diode"
+	"github.com/ravinggo/zerolog/internal/cbor"
 )
 
 func TestNewWriter(t *testing.T) {
 	buf := bytes.Buffer{}
-	w := diode.NewWriter(&buf, 1000, 0, func(missed int) {
-		fmt.Printf("Dropped %d messages\n", missed)
-	})
+	w := diode.NewWriter(
+		&buf, 1000, 0, func(missed int) {
+			fmt.Printf("Dropped %d messages\n", missed)
+		},
+	)
 	log := zerolog.New(w)
 	log.Print("test")
 
@@ -41,9 +43,11 @@ func TestClose(t *testing.T) {
 
 func TestFatal(t *testing.T) {
 	if os.Getenv("TEST_FATAL") == "1" {
-		w := diode.NewWriter(os.Stderr, 1000, 0, func(missed int) {
-			fmt.Printf("Dropped %d messages\n", missed)
-		})
+		w := diode.NewWriter(
+			os.Stderr, 1000, 0, func(missed int) {
+				fmt.Printf("Dropped %d messages\n", missed)
+			},
+		)
 		defer w.Close()
 		log := zerolog.New(w)
 		log.Fatal().Msg("test")
@@ -84,17 +88,21 @@ func Benchmark(b *testing.B) {
 		"Pooler": 10 * time.Millisecond,
 	}
 	for name, interval := range benchs {
-		b.Run(name, func(b *testing.B) {
-			w := diode.NewWriter(io.Discard, 100000, interval, nil)
-			log := zerolog.New(w)
-			defer w.Close()
+		b.Run(
+			name, func(b *testing.B) {
+				w := diode.NewWriter(io.Discard, 100000, interval, nil)
+				log := zerolog.New(w)
+				defer w.Close()
 
-			b.SetParallelism(1000)
-			b.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
-					log.Print("test")
-				}
-			})
-		})
+				b.SetParallelism(1000)
+				b.RunParallel(
+					func(pb *testing.PB) {
+						for pb.Next() {
+							log.Print("test")
+						}
+					},
+				)
+			},
+		)
 	}
 }

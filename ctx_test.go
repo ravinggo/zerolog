@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rs/zerolog/internal/cbor"
+	"github.com/ravinggo/zerolog/internal/cbor"
 )
 
 func TestCtx(t *testing.T) {
@@ -52,9 +52,11 @@ func TestCtxDisabled(t *testing.T) {
 		t.Error("WithContext did not store logger")
 	}
 
-	l.UpdateContext(func(c Context) Context {
-		return c.Str("bar", "baz")
-	})
+	l.UpdateContext(
+		func(c Context) Context {
+			return c.Str("bar", "baz")
+		},
+	)
 	ctx = l.WithContext(ctx)
 	if !reflect.DeepEqual(Ctx(ctx), &l) {
 		t.Error("WithContext did not store updated logger")
@@ -88,10 +90,12 @@ func Test_InterfaceLogObjectMarshaler(t *testing.T) {
 
 	log2 := Ctx(ctx)
 
-	withLog := log2.With().Interface("obj", &logObjectMarshalerImpl{
-		name: "foo",
-		age:  29,
-	}).Logger()
+	withLog := log2.With().Interface(
+		"obj", &logObjectMarshalerImpl{
+			name: "foo",
+			age:  29,
+		},
+	).Logger()
 
 	withLog.Info().Msg("test")
 

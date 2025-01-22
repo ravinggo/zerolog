@@ -1,4 +1,4 @@
-module github.com/rs/zerolog
+module github.com/ravinggo/zerolog
 
 go 1.15
 

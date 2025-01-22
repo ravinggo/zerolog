@@ -25,8 +25,9 @@ import (
 	"strings"
 
 	"github.com/coreos/go-systemd/v22/journal"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/internal/cbor"
+
+	"github.com/ravinggo/zerolog"
+	"github.com/ravinggo/zerolog/internal/cbor"
 )
 
 const defaultJournalDPrio = journal.PriNotice
