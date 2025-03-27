@@ -68,7 +68,6 @@ func newEvent(w LevelWriter, level Level, isJson bool) *Event {
 	e := eventPool.Get().(*Event)
 	e.buf = e.buf[:0]
 	e.fieldsBuf = e.fieldsBuf[:0]
-	e.stackTrace = errors.StackTrace{}
 	e.json = isJson
 	e.ch = nil
 	if e.json {
@@ -107,6 +106,7 @@ func (e *Event) write() (err error) {
 			_, err = e.w.WriteLevel(e.level, e.buf)
 		}
 	}
+	e.stackTrace = nil
 	putEvent(e)
 	return
 }
