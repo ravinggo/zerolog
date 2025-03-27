@@ -43,7 +43,7 @@ func frameField(f errors.Frame, s *state, c rune) string {
 // MarshalStack implements pkg/errors stack trace marshaling.
 //
 // zerolog.ErrorStackMarshaler = MarshalStack
-func MarshalStack(err error) interface{} {
+func MarshalStack(err error) errors.StackTrace {
 	type stackTracer interface {
 		StackTrace() errors.StackTrace
 	}
@@ -68,15 +68,5 @@ func MarshalStack(err error) interface{} {
 		return nil
 	}
 
-	st := sterr.StackTrace()
-	s := &state{}
-	out := make([]map[string]string, 0, len(st))
-	for _, frame := range st {
-		out = append(out, map[string]string{
-			StackSourceFileName:     frameField(frame, s, 's'),
-			StackSourceLineName:     frameField(frame, s, 'd'),
-			StackSourceFunctionName: frameField(frame, s, 'n'),
-		})
-	}
-	return out
+	return sterr.StackTrace()
 }

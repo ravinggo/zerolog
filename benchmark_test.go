@@ -17,31 +17,37 @@ var (
 func BenchmarkLogEmpty(b *testing.B) {
 	logger := New(io.Discard)
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			logger.Log().Msg("")
-		}
-	})
+	b.RunParallel(
+		func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Log().Msg("")
+			}
+		},
+	)
 }
 
 func BenchmarkDisabled(b *testing.B) {
 	logger := New(io.Discard).Level(Disabled)
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			logger.Info().Msg(fakeMessage)
-		}
-	})
+	b.RunParallel(
+		func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info().Msg(fakeMessage)
+			}
+		},
+	)
 }
 
 func BenchmarkInfo(b *testing.B) {
 	logger := New(io.Discard)
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			logger.Info().Msg(fakeMessage)
-		}
-	})
+	b.RunParallel(
+		func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info().Msg(fakeMessage)
+			}
+		},
+	)
 }
 
 func BenchmarkContextFields(b *testing.B) {
@@ -52,11 +58,13 @@ func BenchmarkContextFields(b *testing.B) {
 		Float32("float", -2.203230293249593).
 		Logger()
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			logger.Info().Msg(fakeMessage)
-		}
-	})
+	b.RunParallel(
+		func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info().Msg(fakeMessage)
+			}
+		},
+	)
 }
 
 func BenchmarkContextAppend(b *testing.B) {
@@ -64,26 +72,30 @@ func BenchmarkContextAppend(b *testing.B) {
 		Str("foo", "bar").
 		Logger()
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			logger.With().Str("bar", "baz")
-		}
-	})
+	b.RunParallel(
+		func(pb *testing.PB) {
+			for pb.Next() {
+				logger.With().Str("bar", "baz")
+			}
+		},
+	)
 }
 
 func BenchmarkLogFields(b *testing.B) {
 	logger := New(io.Discard)
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			logger.Info().
-				Str("string", "four!").
-				Time("time", time.Time{}).
-				Int("int", 123).
-				Float32("float", -2.203230293249593).
-				Msg(fakeMessage)
-		}
-	})
+	b.RunParallel(
+		func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info().
+					Str("string", "four!").
+					Time("time", time.Time{}).
+					Int("int", 123).
+					Float32("float", -2.203230293249593).
+					Msg(fakeMessage)
+			}
+		},
+	)
 }
 
 type obj struct {
@@ -228,13 +240,17 @@ func BenchmarkLogFieldType(b *testing.B) {
 	b.ResetTimer()
 	for name := range types {
 		f := types[name]
-		b.Run(name, func(b *testing.B) {
-			b.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
-					f(logger.Info()).Msg("")
-				}
-			})
-		})
+		b.Run(
+			name, func(b *testing.B) {
+				b.RunParallel(
+					func(pb *testing.PB) {
+						for pb.Next() {
+							f(logger.Info()).Msg("")
+						}
+					},
+				)
+			},
+		)
 	}
 }
 
@@ -318,9 +334,6 @@ func BenchmarkContextFieldType(b *testing.B) {
 		"Stringer": func(c Context) Context {
 			return c.Stringer("k", stringer)
 		},
-		"Err": func(c Context) Context {
-			return c.Err(errs[0])
-		},
 		"Errs": func(c Context) Context {
 			return c.Errs("k", errs)
 		},
@@ -362,13 +375,17 @@ func BenchmarkContextFieldType(b *testing.B) {
 	b.ResetTimer()
 	for name := range types {
 		f := types[name]
-		b.Run(name, func(b *testing.B) {
-			b.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
-					l := f(logger.With()).Logger()
-					l.Info().Msg("")
-				}
-			})
-		})
+		b.Run(
+			name, func(b *testing.B) {
+				b.RunParallel(
+					func(pb *testing.PB) {
+						for pb.Next() {
+							l := f(logger.With()).Logger()
+							l.Info().Msg("")
+						}
+					},
+				)
+			},
+		)
 	}
 }

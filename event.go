@@ -1,6 +1,7 @@
 package zerolog
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -8,6 +9,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var eventPool = &sync.Pool{
@@ -23,15 +26,16 @@ var eventPool = &sync.Pool{
 // Event represents a log event. It is instanced by one of the level method of
 // Logger and finalized by the Msg or Msgf method.
 type Event struct {
-	buf       []byte
-	fieldsBuf []byte
-	w         LevelWriter
-	level     Level
-	done      func(msg string)
-	stack     bool            // enable error stack trace
-	ch        []Hook          // hooks from context
-	ctx       context.Context // Optional Go context for event
-	json      bool            // JSON format
+	buf        []byte
+	fieldsBuf  []byte
+	w          LevelWriter
+	level      Level
+	done       func(msg string)
+	stack      bool            // enable error stack trace
+	ch         []Hook          // hooks from context
+	ctx        context.Context // Optional Go context for event
+	json       bool            // JSON format
+	stackTrace errors.StackTrace
 }
 
 func putEvent(e *Event) {
@@ -64,6 +68,7 @@ func newEvent(w LevelWriter, level Level, isJson bool) *Event {
 	e := eventPool.Get().(*Event)
 	e.buf = e.buf[:0]
 	e.fieldsBuf = e.fieldsBuf[:0]
+	e.stackTrace = errors.StackTrace{}
 	e.json = isJson
 	e.ch = nil
 	if e.json {
@@ -83,11 +88,18 @@ func (e *Event) write() (err error) {
 	}
 	if e.level != Disabled {
 		if e.json {
+			e.buf = enc.AppendInterface(enc.AppendKey(e.buf, ErrorStackFieldName), e.stackTrace)
 			e.buf = enc.AppendEndMarker(e.buf)
 			e.buf = enc.AppendLineBreak(e.buf)
 		} else {
 			e.fieldsBuf = enc.AppendEndMarker(e.fieldsBuf)
 			e.fieldsBuf = enc.AppendLineBreak(e.fieldsBuf)
+			if len(e.stackTrace) > 0 {
+				b := bytes.NewBuffer(e.fieldsBuf)
+				_, _ = fmt.Fprintf(b, "%+v", e.stackTrace)
+				e.fieldsBuf = b.Bytes()
+			}
+
 			e.buf = append(e.buf, e.fieldsBuf...)
 		}
 
@@ -482,19 +494,7 @@ func (e *Event) Err(err error) *Event {
 		return e
 	}
 	if e.stack && ErrorStackMarshaler != nil {
-		switch m := ErrorStackMarshaler(err).(type) {
-		case nil:
-		case LogObjectMarshaler:
-			e.Object(ErrorStackFieldName, m)
-		case error:
-			if m != nil && !isNilValue(m) {
-				e.Str(ErrorStackFieldName, m.Error())
-			}
-		case string:
-			e.Str(ErrorStackFieldName, m)
-		default:
-			e.Interface(ErrorStackFieldName, m)
-		}
+		e.stackTrace = ErrorStackMarshaler(err)
 	}
 	return e.AnErr(ErrorFieldName, err)
 }

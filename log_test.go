@@ -120,7 +120,6 @@ func TestWith(t *testing.T) {
 		Hex("hex", []byte{0x12, 0xef}).
 		RawJSON("json", []byte(`{"some":"json"}`)).
 		AnErr("some_err", nil).
-		Err(errors.New("some error")).
 		Bool("bool", true).
 		Int("int", 1).
 		Int8("int8", 2).
@@ -140,7 +139,7 @@ func TestWith(t *testing.T) {
 	caller := fmt.Sprintf("%s:%d", file, line+3)
 	log := ctx.Caller().Logger()
 	log.Log().Msg("")
-	if got, want := decodeIfBinaryToString(out.Bytes()), `{"caller":"`+caller+`","string":"foo","stringer":"127.0.0.1","stringer_nil":null,"bytes":"bar","hex":"12ef","json":{"some":"json"},"error":"some error","bool":true,"int":1,"int8":2,"int16":3,"int32":4,"int64":5,"uint":6,"uint8":7,"uint16":8,"uint32":9,"uint64":10,"float32":11.101,"float64":12.30303,"time":"0001-01-01T00:00:00Z"}`+"\n"; got != want {
+	if got, want := decodeIfBinaryToString(out.Bytes()), `{"caller":"`+caller+`","string":"foo","stringer":"127.0.0.1","stringer_nil":null,"bytes":"bar","hex":"12ef","json":{"some":"json"},"bool":true,"int":1,"int8":2,"int16":3,"int32":4,"int64":5,"uint":6,"uint8":7,"uint16":8,"uint32":9,"uint64":10,"float32":11.101,"float64":12.30303,"time":"0001-01-01T00:00:00Z"}`+"\n"; got != want {
 		t.Errorf("invalid log output:\ngot:  %v\nwant: %v", got, want)
 	}
 
@@ -154,7 +153,7 @@ func TestWith(t *testing.T) {
 	}()
 	// The above line is a little contrived, but the line above should be the line due
 	// to the extra frame skip.
-	if got, want := decodeIfBinaryToString(out.Bytes()), `{"caller":"`+caller+`","string":"foo","stringer":"127.0.0.1","stringer_nil":null,"bytes":"bar","hex":"12ef","json":{"some":"json"},"error":"some error","bool":true,"int":1,"int8":2,"int16":3,"int32":4,"int64":5,"uint":6,"uint8":7,"uint16":8,"uint32":9,"uint64":10,"float32":11.101,"float64":12.30303,"time":"0001-01-01T00:00:00Z"}`+"\n"; got != want {
+	if got, want := decodeIfBinaryToString(out.Bytes()), `{"caller":"`+caller+`","string":"foo","stringer":"127.0.0.1","stringer_nil":null,"bytes":"bar","hex":"12ef","json":{"some":"json"},"bool":true,"int":1,"int8":2,"int16":3,"int32":4,"int64":5,"uint":6,"uint8":7,"uint16":8,"uint32":9,"uint64":10,"float32":11.101,"float64":12.30303,"time":"0001-01-01T00:00:00Z"}`+"\n"; got != want {
 		t.Errorf("invalid log output:\ngot:  %v\nwant: %v", got, want)
 	}
 }

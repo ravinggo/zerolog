@@ -172,27 +172,6 @@ func (c Context) Errs(key string, errs []error) Context {
 	return c.Array(key, arr)
 }
 
-// Err adds the field "error" with serialized err to the logger context.
-func (c Context) Err(err error) Context {
-	if c.l.stack && ErrorStackMarshaler != nil {
-		switch m := ErrorStackMarshaler(err).(type) {
-		case nil:
-		case LogObjectMarshaler:
-			c = c.Object(ErrorStackFieldName, m)
-		case error:
-			if m != nil && !isNilValue(m) {
-				c = c.Str(ErrorStackFieldName, m.Error())
-			}
-		case string:
-			c = c.Str(ErrorStackFieldName, m)
-		default:
-			c = c.Interface(ErrorStackFieldName, m)
-		}
-	}
-
-	return c.AnErr(ErrorFieldName, err)
-}
-
 // Ctx adds the context.Context to the logger context. The context.Context is
 // not rendered in the error message, but is made available for hooks to use.
 // A typical use case is to extract tracing information from the

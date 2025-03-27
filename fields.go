@@ -75,20 +75,6 @@ func appendFieldList(dst []byte, kvList []interface{}, stack bool) []byte {
 				dst = enc.AppendInterface(dst, m)
 			}
 
-			if stack && ErrorStackMarshaler != nil {
-				dst = enc.AppendKey(dst, ErrorStackFieldName)
-				switch m := ErrorStackMarshaler(val).(type) {
-				case nil:
-				case error:
-					if m != nil && !isNilValue(m) {
-						dst = enc.AppendString(dst, m.Error())
-					}
-				case string:
-					dst = enc.AppendString(dst, m)
-				default:
-					dst = enc.AppendInterface(dst, m)
-				}
-			}
 		case []error:
 			dst = enc.AppendArrayStart(dst)
 			for i, err := range val {

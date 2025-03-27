@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -74,7 +76,7 @@ var (
 	ErrorStackFieldName = "stack"
 
 	// ErrorStackMarshaler extract the stack from err if any.
-	ErrorStackMarshaler func(err error) interface{}
+	ErrorStackMarshaler func(err error) errors.StackTrace
 
 	// ErrorMarshalFunc allows customization of global error marshaling
 	ErrorMarshalFunc = func(err error) interface{} {
