@@ -96,7 +96,7 @@ func (e *Event) write() (err error) {
 			e.fieldsBuf = enc.AppendLineBreak(e.fieldsBuf)
 			if len(e.stackTrace) > 0 {
 				b := bytes.NewBuffer(e.fieldsBuf)
-				_, _ = fmt.Fprintf(b, "%+v", e.stackTrace)
+				_, _ = fmt.Fprintf(b, "%+v\n", e.stackTrace)
 				e.fieldsBuf = b.Bytes()
 			}
 
