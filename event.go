@@ -87,7 +87,9 @@ func (e *Event) write() (err error) {
 	}
 	if e.level != Disabled {
 		if e.json {
-			e.buf = enc.AppendInterface(enc.AppendKey(e.buf, ErrorStackFieldName), e.stackTrace)
+			if len(e.stackTrace) > 0 {
+				e.buf = enc.AppendInterface(enc.AppendKey(e.buf, ErrorStackFieldName), e.stackTrace)
+			}
 			e.buf = enc.AppendEndMarker(e.buf)
 			e.buf = enc.AppendLineBreak(e.buf)
 		} else {
